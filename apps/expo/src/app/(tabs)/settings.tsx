@@ -233,7 +233,7 @@ export default function SettingsScreen() {
             <Switch
               value={item.value}
               onValueChange={item.onToggle}
-              trackColor={{ false: theme.muted, true: theme.primary }}
+              trackColor={{ false: theme.muted, true: colors.civicBlue }}
               thumbColor={colors.white}
             />
           </View>

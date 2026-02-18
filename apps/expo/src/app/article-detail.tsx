@@ -24,6 +24,7 @@ import {
   colors,
   createTabContainerStyles,
   getMarkdownStyles,
+  getTypeBadgeColor,
   layout,
   rd,
   sp,
@@ -164,13 +165,15 @@ export default function ArticleDetailScreen() {
           contentContainerStyle={localStyles.scrollViewContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Type badge at top */}
+          {/* Content type badge */}
           <View
-            style={[badges.base, { backgroundColor: colors.cyan[600] }]}
+            style={[badges.base, { backgroundColor: getTypeBadgeColor(content.type ?? "general") }]}
             lightColor="transparent"
             darkColor="transparent"
           >
-            <Text style={badges.text}>GENERAL</Text>
+            <Text style={badges.text}>
+              {content.type === "bill" ? "BILL" : content.type === "government_content" ? "ORDER" : content.type === "court_case" ? "CASE" : "NEWS"}
+            </Text>
           </View>
 
           {/* Article title */}
@@ -213,7 +216,7 @@ export default function ArticleDetailScreen() {
               cards.content,
               {
                 backgroundColor: theme.card,
-                borderColor: colors.cyan[700],
+                borderColor: colors.borderSubtle,
                 marginTop: sp[5],
                 marginBottom: sp[20],
               },
@@ -227,37 +230,14 @@ export default function ArticleDetailScreen() {
           </View>
         </ScrollView>
 
-        {/* Floating action icons on right side */}
-        <View style={{...localStyles.floatingActions, backgroundColor:theme.primary, borderRadius:rd.xl, opacity:0.7 }} pointerEvents="box-none">
-          {/*<TouchableOpacity style={buttons.floating}>
-            <Ionicons
-              name="heart-outline"
-              size={24}
-              color={theme.foreground}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={buttons.floating}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={24}
-              color={theme.foreground}
-            />
-          </TouchableOpacity>*/}
-
-          {/*<TouchableOpacity style={buttons.floating}>
-            <Ionicons name="share-outline" size={24} color={theme.foreground} />
-          </TouchableOpacity>*/}
-
-          <TouchableOpacity
-            style={buttons.floating}
-            // style={[buttons.floatingLarge, localStyles.floatingCloseButton, { backgroundColor: theme.primary }]}
-            onPress={() => router.back()}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="close" size={24} color={theme.primaryForeground} />
-          </TouchableOpacity>
-        </View>
+        {/* Close button — top-left, no background per brand spec */}
+        <TouchableOpacity
+          style={localStyles.floatingActions}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={24} color={colors.white} />
+        </TouchableOpacity>
       </SafeAreaView>
     </>
   );
@@ -274,17 +254,18 @@ const localStyles = StyleSheet.create({
     padding: sp[5],
   },
   errorButton: {
-    borderRadius: rd["md"],
+    borderRadius: rd.full,
     paddingHorizontal: sp[8],
     paddingVertical: sp[3],
     marginTop: sp[4],
+    minHeight: 48,
   },
   errorButtonText: {
     fontSize: 16,
     fontWeight: "600",
   },
   tabButton: {
-    borderRadius: rd["md"],
+    borderRadius: rd.full,
   },
   scrollViewContent: {
     padding: sp[5],
@@ -297,25 +278,25 @@ const localStyles = StyleSheet.create({
   articleDescription: {
     marginBottom: sp[4],
   },
+  // White pill button — brand signature for primary CTAs
   viewOriginalButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: sp[3],
-    paddingHorizontal: sp[4],
-    borderRadius: rd["md"],
+    paddingHorizontal: sp[6],
+    borderRadius: rd.full,
     marginTop: sp[4],
+    minHeight: 48,
   },
+  // Close button — top-left, 44×44 touch target, no background (brand spec)
   floatingActions: {
     position: "absolute",
-    top: "50%",
-    right: sp[5],
-    transform: [{ translateY: -80 }],
-    gap: sp[4],
-  },
-  floatingCloseButton: {
-    position: "absolute",
-    bottom: sp[8],
-    right: sp[5],
+    top: sp[4],
+    left: sp[5],
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

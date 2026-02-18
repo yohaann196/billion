@@ -1,6 +1,6 @@
 /**
  * Consolidated Styles for the Expo Native App
- * "Deep State Modern" - Futuristic Civic Tech Aesthetic
+ * Billion Brand System — Authoritative · Classy · Sleek
  *
  * This is the SINGLE SOURCE OF TRUTH for all styling in the app.
  * Import everything you need from here: `import { ... } from "~/styles"`
@@ -54,40 +54,36 @@ export function useTheme(): {
 /** Pre-computed spacing values in pixels (spacing token * 16) */
 export const sp = {
   0: 0,
-  1: 4, // 0.25 * 16
-  2: 8, // 0.5 * 16
-  3: 12, // 0.75 * 16
-  4: 16, // 1 * 16
-  5: 20, // 1.25 * 16
-  6: 24, // 1.5 * 16
-  8: 32, // 2 * 16
+  1: 4,   // 0.25 * 16
+  2: 8,   // 0.5 * 16
+  3: 12,  // 0.75 * 16
+  4: 16,  // 1 * 16
+  5: 20,  // 1.25 * 16
+  6: 24,  // 1.5 * 16
+  8: 32,  // 2 * 16
   10: 40, // 2.5 * 16
   12: 48, // 3 * 16
   16: 64, // 4 * 16
   20: 80, // 5 * 16
   24: 96, // 6 * 16
 } as const;
-// export const sp = (key: keyof typeof spacing): number => spacing[key] * 16;
-/** Pre-computed radius values in pixels (radius token * 16) */
+
+/** Pre-computed radius values in pixels — from BRANDING.md §9 */
 export const rd = {
   none: 0,
-  sm: 6, // 0.375 * 16
-  md: 8, // 0.5 * 16
-  lg: 12, // 0.75 * 16
-  xl: 16, // 1 * 16
-  "2xl": 24, // 1.5 * 16
-  full: 9999,
+  sm: 6,    // Small elements, inline badges
+  md: 8,    // Content type badges, tab pills
+  lg: 14,   // Cards, containers, inputs
+  xl: 20,   // Large modals, overlay screens
+  "2xl": 24,
+  full: 9999, // Buttons, navigation pills
 } as const;
-// export const rd = (key: keyof typeof radius): number => {
-//   const value = radius[key];
-//   return typeof value === "number" ? value * 16 : value;
-// };
+
 // ============================================================================
 // COMMON LAYOUT STYLES
 // ============================================================================
 
 export const layout = StyleSheet.create({
-  // Flex containers
   flex1: { flex: 1 },
   row: { flexDirection: "row" },
   column: { flexDirection: "column" },
@@ -101,11 +97,9 @@ export const layout = StyleSheet.create({
   alignStart: { alignItems: "flex-start" },
   wrap: { flexWrap: "wrap" },
 
-  // Common containers
   container: { flex: 1 },
   scrollView: { flex: 1 },
 
-  // Full screen loading/error states
   fullCenter: {
     flex: 1,
     alignItems: "center",
@@ -114,96 +108,102 @@ export const layout = StyleSheet.create({
 });
 
 // ============================================================================
-// TYPOGRAPHY STYLES
+// TYPOGRAPHY STYLES — BRANDING.md §4
+// Albert Sans for UI; serifs handled per-component via fontFamily
 // ============================================================================
 
 export const typography = StyleSheet.create({
-  // Headings
+  // Headlines — 32px bold (IBM Plex Serif in practice; fallback to system serif)
   h1: {
-    fontSize: fontSize["3xl"],
+    fontSize: fontSize["5xl"] * 0.667, // 32px
     fontWeight: fontWeight.bold,
-    lineHeight: fontSize["3xl"] * 1.2,
+    lineHeight: 32 * 1.2,
   },
+  // Subheadings — 22–24px bold (Inria Serif in practice)
   h2: {
     fontSize: fontSize["2xl"],
     fontWeight: fontWeight.bold,
-    lineHeight: fontSize["2xl"] * 1.2,
+    lineHeight: fontSize["2xl"] * 1.3,
   },
   h3: {
-    fontSize: fontSize.xl,
+    fontSize: 22,
     fontWeight: fontWeight.bold,
-    lineHeight: fontSize.xl * 1.2,
+    lineHeight: 22 * 1.3,
   },
   h4: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
-    lineHeight: fontSize.lg * 1.2,
+    lineHeight: fontSize.lg * 1.3,
   },
 
-  // Body text
+  // Body — 18px regular (Albert Sans)
   body: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.normal,
+    lineHeight: fontSize.lg * 1.5,
+  },
+  // Small/UI — 16px medium
+  bodySmall: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.normal,
-    lineHeight: fontSize.base * 1.5,
+    lineHeight: fontSize.base * 1.4,
   },
-  bodySmall: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.normal,
-    lineHeight: fontSize.sm * 1.5,
-  },
+  // Micro — 12–14px (timestamps, badges, fine print)
   caption: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.normal,
     lineHeight: fontSize.xs * 1.4,
   },
 
-  // Text styles
   bold: { fontWeight: fontWeight.bold },
   semibold: { fontWeight: fontWeight.semibold },
   medium: { fontWeight: fontWeight.medium },
   italic: { fontStyle: "italic" },
+  // ALL CAPS sparingly — badges, short labels (4 words max)
   uppercase: { textTransform: "uppercase", letterSpacing: 0.5 },
   center: { textAlign: "center" },
 });
 
 // ============================================================================
-// CARD STYLES
+// CARD STYLES — BRANDING.md §5
 // ============================================================================
 
 export const cards = StyleSheet.create({
-  // Base card
+  // Base card — Slate background, 14px radius
   base: {
-    borderRadius: rd.xl,
+    borderRadius: rd.lg,
     padding: sp[5],
   },
 
-  // Card with border (modern style)
+  // Content card (feed items) — Slate bg, subtle white border
   bordered: {
-    borderRadius: rd.xl,
-    borderWidth: 2,
+    borderRadius: rd.lg,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
     padding: sp[5],
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.30,
     shadowRadius: 8,
     elevation: 4,
   },
 
-  // Content card (for articles, etc.)
+  // Content card for article rendering
   content: {
     borderRadius: rd.lg,
-    borderWidth: 2,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
     padding: sp[5],
   },
 
-  // Elevated card with heavy shadow
+  // Elevated card (modals, overlays) — deeper shadow
   elevated: {
     borderRadius: rd.xl,
     padding: sp[6],
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOpacity: 0.40,
+    shadowRadius: 24,
     elevation: 8,
   },
 });
@@ -218,8 +218,9 @@ export const headers = StyleSheet.create({
     paddingBottom: sp[5],
   },
   title: {
-    fontSize: fontSize["2xl"],
+    fontSize: 32,
     fontWeight: fontWeight.bold,
+    lineHeight: 32 * 1.2,
     marginBottom: sp[4],
   },
   withBorder: {
@@ -228,66 +229,79 @@ export const headers = StyleSheet.create({
 });
 
 // ============================================================================
-// INPUT STYLES
+// INPUT STYLES — BRANDING.md §5 Inputs
 // ============================================================================
 
 export const inputs = StyleSheet.create({
   search: {
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: rd.lg,
+    paddingHorizontal: sp[4],
+    paddingVertical: sp[3],
+    fontSize: fontSize.base,
+    // Color applied dynamically via createSearchStyles()
+  },
+  text: {
     borderWidth: 1,
     borderRadius: rd.lg,
     paddingHorizontal: sp[4],
     paddingVertical: sp[3],
     fontSize: fontSize.base,
   },
-  text: {
-    borderWidth: 1,
-    borderRadius: rd.md,
-    paddingHorizontal: sp[4],
-    paddingVertical: sp[3],
-    fontSize: fontSize.base,
-  },
 });
 
 // ============================================================================
-// BUTTON STYLES (for custom buttons, use Button from @acme/ui for standard)
+// BUTTON STYLES — BRANDING.md §5 Buttons
 // ============================================================================
 
 export const buttons = StyleSheet.create({
-  // Tab button base
+  // Primary button — white pill (brand signature)
+  primary: {
+    backgroundColor: colors.white,
+    paddingHorizontal: sp[6],
+    paddingVertical: sp[3],
+    borderRadius: rd.full,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+
+  // Tab pill — active: white fill/black text; inactive: transparent/bordered
   tab: {
-    paddingHorizontal: sp[3],
-    paddingVertical: sp[1] + 2,
-    borderRadius: rd.md,
+    paddingHorizontal: sp[4],
+    paddingVertical: sp[2],
+    borderRadius: rd.full,
   },
   tabText: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
   },
 
-  // Floating action button
+  // Floating action button (44×44 minimum touch target)
   floating: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  floatingLarge: {
     width: 48,
     height: 48,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-  },
-  floatingLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.30,
     shadowRadius: 4.65,
     elevation: 8,
   },
 });
 
 // ============================================================================
-// BADGE STYLES
+// BADGE STYLES — BRANDING.md §5 Content Type Button
 // ============================================================================
 
 export const badges = StyleSheet.create({
@@ -295,13 +309,14 @@ export const badges = StyleSheet.create({
     alignSelf: "flex-start",
     paddingHorizontal: sp[3],
     paddingVertical: sp[1],
-    borderRadius: rd.sm,
+    borderRadius: rd.md,
   },
   text: {
     color: colors.white,
     fontSize: fontSize.xs,
     fontWeight: fontWeight.bold,
     letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
 });
 
@@ -316,7 +331,7 @@ export const settings = StyleSheet.create({
   sectionTitle: {
     marginHorizontal: sp[5],
     marginBottom: sp[3],
-    fontSize: fontSize.base,
+    fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -382,25 +397,28 @@ export const actions = StyleSheet.create({
 export function getMarkdownStyles(theme: Theme) {
   return {
     body: {
-      fontSize: fontSize.base,
-      lineHeight: sp[6],
+      fontSize: fontSize.lg, // 18px body
+      lineHeight: fontSize.lg * 1.5,
       color: theme.foreground,
     },
     heading1: {
-      fontSize: fontSize["2xl"],
+      fontSize: 32,
       fontWeight: fontWeight.bold,
+      lineHeight: 32 * 1.2,
       marginBottom: sp[4],
       color: theme.foreground,
     },
     heading2: {
-      fontSize: fontSize.xl,
+      fontSize: fontSize["2xl"],
       fontWeight: fontWeight.bold,
+      lineHeight: fontSize["2xl"] * 1.3,
       marginBottom: sp[3],
       color: theme.foreground,
     },
     heading3: {
       fontSize: fontSize.lg,
       fontWeight: fontWeight.semibold,
+      lineHeight: fontSize.lg * 1.3,
       marginBottom: sp[2],
       color: theme.foreground,
     },
@@ -417,13 +435,13 @@ export function getMarkdownStyles(theme: Theme) {
       fontStyle: "italic" as const,
     },
     link: {
-      color: theme.accent,
+      color: colors.civicBlue,
       textDecorationLine: "underline" as const,
     },
     blockquote: {
       backgroundColor: theme.muted,
       borderLeftWidth: 4,
-      borderLeftColor: theme.accent,
+      borderLeftColor: colors.civicBlue,
       paddingLeft: sp[4],
       paddingVertical: sp[2],
       marginVertical: sp[3],
@@ -433,14 +451,14 @@ export function getMarkdownStyles(theme: Theme) {
       color: theme.foreground,
       paddingHorizontal: sp[2],
       paddingVertical: sp[1],
-      borderRadius: rd["sm"],
+      borderRadius: rd.sm,
       fontFamily: "monospace",
     },
     code_block: {
       backgroundColor: theme.muted,
       color: theme.foreground,
       padding: sp[4],
-      borderRadius: rd["md"],
+      borderRadius: rd.md,
       marginVertical: sp[3],
       fontFamily: "monospace",
     },
@@ -448,14 +466,16 @@ export function getMarkdownStyles(theme: Theme) {
 }
 
 // ============================================================================
-// TYPE BADGE COLORS (for bills, orders, cases)
+// CONTENT TYPE BADGE COLORS — BRANDING.md §6
 // ============================================================================
 
 export const typeBadgeColors = {
-  bill: colors.purple[600],
-  order: colors.indigo[600],
-  case: colors.cyan[600],
-  general: colors.gray[500],
+  bill: colors.civicBlue,    // #4A7CFF
+  order: colors.deepIndigo,  // #6366F1
+  case: colors.teal,         // #0891B2
+  general: colors.muted,     // #8A8FA0
+  government_content: colors.deepIndigo, // #6366F1
+  court_case: colors.teal,   // #0891B2
 } as const;
 
 export function getTypeBadgeColor(type: string, fallback?: string): string {
@@ -470,7 +490,7 @@ export function getTypeBadgeColor(type: string, fallback?: string): string {
 // COMBINED STYLES HELPERS - For building complete screen styles
 // ============================================================================
 
-/** Create themed styles for a screen header */
+/** Create themed header styles for a screen */
 export function createHeaderStyles(theme: Theme, insetTop: number) {
   return {
     container: {
@@ -480,24 +500,25 @@ export function createHeaderStyles(theme: Theme, insetTop: number) {
       paddingTop: insetTop + 20,
     },
     title: {
-      fontSize: fontSize["2xl"],
-      fontWeight: fontWeight.bold,
+      fontSize: 32,
+      fontWeight: fontWeight.bold as "700",
+      lineHeight: 32 * 1.2,
       color: theme.foreground,
       marginBottom: sp[4],
     },
   };
 }
 
-/** Create themed styles for search input */
+/** Create themed styles for search input — BRANDING.md §5 Inputs */
 export function createSearchStyles(theme: Theme) {
   return {
-    backgroundColor: theme.input,
+    backgroundColor: theme.input,  // Slate
     borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: rd["lg"],
+    borderColor: colors.borderLight, // rgba(255,255,255,0.10)
+    borderRadius: rd.lg,             // 14px
     paddingHorizontal: sp[4],
     paddingVertical: sp[3],
-    fontSize: fontSize.base,
+    fontSize: fontSize.base,         // 16px
     color: theme.foreground,
   };
 }

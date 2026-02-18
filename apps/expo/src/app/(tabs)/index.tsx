@@ -17,6 +17,7 @@ import { Button } from "@acme/ui/button-native";
 import { Text, View } from "~/components/Themed";
 // import { WireframeWave } from "~/components/WireframeWave";
 import {
+  badges,
   buttons,
   cards,
   colors,
@@ -25,7 +26,9 @@ import {
   createTabContainerStyles,
   fontSize,
   fontWeight,
+  getTypeBadgeColor,
   layout,
+  rd,
   sp,
   type Theme,
   typography,
@@ -80,8 +83,8 @@ const ContentCardComponent = ({
         styles.modernCard,
         {
           backgroundColor: theme.card,
-          borderColor: colors.cyan[600],
-          borderWidth: 0
+          borderColor: colors.borderSubtle,
+          borderWidth: 1
         },
       ]}
       onPress={() => {
@@ -94,10 +97,16 @@ const ContentCardComponent = ({
         lightColor="transparent"
         darkColor="transparent"
       >
-        {/* Category label */}
-        <Text style={[styles.categoryLabel, { color: theme.mutedForeground }]}>
-          {item.type === "bill" ? "Bill" : item.type === "government_content" ? "Gov Content" : item.type === "court_case" ? "Case" : "General"}
-        </Text>
+        {/* Content type badge */}
+        <View
+          style={[badges.base, { backgroundColor: getTypeBadgeColor(item.type) }]}
+          lightColor="transparent"
+          darkColor="transparent"
+        >
+          <Text style={badges.text}>
+            {item.type === "bill" ? "BILL" : item.type === "government_content" ? "ORDER" : item.type === "court_case" ? "CASE" : "NEWS"}
+          </Text>
+        </View>
 
         {/* Title with hybrid image support */}
         <View style={{backgroundColor: theme.card, flex:1,flexDirection:'row', gap: sp[3],}}>
@@ -169,7 +178,7 @@ const ContentCardComponent = ({
             Watch Short
           </Button>*/}
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             style={styles.modernCardButton}
             onPress={() => {
@@ -203,7 +212,7 @@ const TabButton = ({
         : {
             backgroundColor: "transparent",
             borderWidth: 1,
-            borderColor: theme.border,
+            borderColor: colors.borderLight,
           },
     ]}
     onPress={onPress}
@@ -212,7 +221,7 @@ const TabButton = ({
       style={[
         buttons.tabText,
         {
-          color: active ? theme.primaryForeground : theme.mutedForeground,
+          color: active ? theme.primaryForeground : "rgba(255, 255, 255, 0.60)",
         },
       ]}
     >
@@ -389,11 +398,6 @@ const styles = StyleSheet.create({
   },
   modernCardContent: {
     gap: sp[3],
-  },
-  categoryLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    marginBottom: sp[1],
   },
   buttonContainer: {
     flexDirection: "row",
