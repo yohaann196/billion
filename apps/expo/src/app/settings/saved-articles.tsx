@@ -3,15 +3,16 @@
  *
  * MOCK DATA / TODO:
  * - TODO: Replace MOCK_SAVED with real data from tRPC (e.g. trpc.content.saved.list)
- * - TODO: Persist unsave action via tRPC mutation (trpc.content.saved.remove)
+ * - TODO: Persist unsave action via tRPC mutation (trpc.content.saved.remove) — call in commitRemoval()
  * - TODO: Navigate to article detail on card tap (router.push with content id)
  * - TODO: Implement sort/filter controls (by date, by type)
  * - TODO: Paginate / infinite scroll once real data is wired
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -78,49 +79,123 @@ const TYPE_ICONS: Record<string, React.ComponentProps<typeof Ionicons>["name"]> 
   news: "newspaper-outline",
 };
 
-function SwipeableCard({
-  item,
-  onUnsave,
-}: {
+const UNDO_DURATION = 4000;
+const TOAST_HEIGHT = 56; // px per toast for stacking offset
+
+// ─── Pending removal entry ────────────────────────────────────────────────────
+
+interface PendingRemoval {
+  key: string; // unique per removal (item.id + timestamp)
   item: SavedItem;
-  onUnsave: (id: string) => void;
+  // Original position in MOCK_SAVED order, for re-insertion
+  originalIndex: number;
+}
+
+// ─── Single Undo Toast ────────────────────────────────────────────────────────
+
+function UndoToast({
+  entry,
+  stackIndex,   // 0 = bottom (newest), 1 = above that, etc.
+  onUndo,
+  onCommit,
+}: {
+  entry: PendingRemoval;
+  stackIndex: number;
+  onUndo: (key: string) => void;
+  onCommit: (key: string) => void;
 }) {
   const { theme } = useTheme();
-  const swipeableRef = useRef<Swipeable>(null);
+  const slideY = useRef(new Animated.Value(80)).current;
+  const progress = useRef(new Animated.Value(1)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Stable refs so animation callbacks never go stale
+  const onUndoRef = useRef(onUndo);
+  const onCommitRef = useRef(onCommit);
+  useEffect(() => { onUndoRef.current = onUndo; }, [onUndo]);
+  useEffect(() => { onCommitRef.current = onCommit; }, [onCommit]);
 
-  const renderRightActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [-80, 0],
-      outputRange: [1, 0.8],
+  useEffect(() => {
+    slideY.setValue(80);
+    progress.setValue(1);
+
+    Animated.spring(slideY, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }).start();
+    Animated.timing(progress, { toValue: 0, duration: UNDO_DURATION, easing: Easing.linear, useNativeDriver: false }).start();
+
+    timerRef.current = setTimeout(() => {
+      onCommitRef.current(entry.key);
+    }, UNDO_DURATION);
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [entry.key]);
+
+  const handleUndo = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    Animated.spring(slideY, { toValue: 80, useNativeDriver: true, tension: 80, friction: 12 })
+      .start(() => onUndoRef.current(entry.key));
+  };
+
+  const barWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] });
+
+  // Stack offset: each older toast sits higher up
+  const bottomOffset = sp[6] + stackIndex * (TOAST_HEIGHT + sp[2]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.toast,
+        { backgroundColor: theme.card, borderColor: theme.border, bottom: bottomOffset },
+        { transform: [{ translateY: slideY }] },
+      ]}
+    >
+      <Animated.View style={[styles.toastBar, { width: barWidth, backgroundColor: colors.civicBlue }]} />
+      <View style={styles.toastContent} lightColor="transparent" darkColor="transparent">
+        <Ionicons name="bookmark-outline" size={16} color={theme.textSecondary} />
+        <Text style={[styles.toastLabel, { color: theme.foreground }]} numberOfLines={1}>
+          Unsaved "{entry.item.title}"
+        </Text>
+        <TouchableOpacity
+          onPress={handleUndo}
+          style={[styles.undoBtn, { borderColor: colors.civicBlue }]}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.undoBtnText, { color: colors.civicBlue }]}>Undo</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+}
+
+// ─── Swipeable Card ───────────────────────────────────────────────────────────
+
+function SwipeableCard({
+  item,
+  onFullSwipe,
+}: {
+  item: SavedItem;
+  onFullSwipe: (id: string) => void;
+}) {
+  const { theme } = useTheme();
+
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>) => {
+    const bgColor = progress.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [colors.civicBlue + "00", "#C0392B88", "#C0392B"],
       extrapolate: "clamp",
     });
-
     return (
-      <TouchableOpacity
-        style={styles.deleteAction}
-        onPress={() => {
-          swipeableRef.current?.close();
-          onUnsave(item.id);
-        }}
-        activeOpacity={0.85}
-      >
-        <Animated.View style={[styles.deleteActionInner, { transform: [{ scale }] }]}>
-          <Ionicons name="bookmark-outline" size={20} color={colors.white} />
-          <Text style={styles.deleteActionText}>Unsave</Text>
-        </Animated.View>
-      </TouchableOpacity>
+      <Animated.View style={[styles.deleteAction, { backgroundColor: bgColor }]}>
+        <Ionicons name="bookmark-outline" size={22} color={colors.white} />
+        <Text style={styles.deleteActionText}>Unsave</Text>
+      </Animated.View>
     );
   };
 
   return (
     <Swipeable
-      ref={swipeableRef}
       renderRightActions={renderRightActions}
-      rightThreshold={40}
+      rightThreshold={60}
       overshootRight={false}
+      onSwipeableOpen={() => onFullSwipe(item.id)}
     >
       {/* TODO: Tap to navigate to article detail */}
       <TouchableOpacity
@@ -129,11 +204,7 @@ function SwipeableCard({
       >
         <View style={styles.cardTop} lightColor="transparent" darkColor="transparent">
           <View style={styles.cardTopLeft} lightColor="transparent" darkColor="transparent">
-            <Ionicons
-              name={TYPE_ICONS[item.type] ?? "document-outline"}
-              size={14}
-              color={item.color}
-            />
+            <Ionicons name={TYPE_ICONS[item.type] ?? "document-outline"} size={14} color={item.color} />
             <View
               style={[styles.typeBadge, { backgroundColor: item.color + "22" }]}
               lightColor="transparent"
@@ -146,32 +217,60 @@ function SwipeableCard({
           </View>
           <Text style={[styles.date, { color: theme.mutedForeground }]}>{item.date}</Text>
         </View>
-
         <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={3}>
           {item.title}
         </Text>
-
-        <View style={styles.swipeHint} lightColor="transparent" darkColor="transparent">
-          <Ionicons name="chevron-back" size={11} color={theme.mutedForeground} />
-          <Text style={[styles.swipeHintText, { color: theme.mutedForeground }]}>
-            Swipe to unsave
-          </Text>
-        </View>
       </TouchableOpacity>
     </Swipeable>
   );
 }
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SavedArticlesScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   // TODO: Replace with real data from tRPC query
   const [items, setItems] = useState<SavedItem[]>(MOCK_SAVED);
+  const [pendingQueue, setPendingQueue] = useState<PendingRemoval[]>([]);
 
-  // TODO: Call tRPC mutation to persist removal
-  const handleUnsave = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleFullSwipe = useCallback((id: string) => {
+    // Find original index in the canonical source list for stable re-insertion
+    const originalIndex = MOCK_SAVED.findIndex((i) => i.id === id);
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      if (!item) return prev;
+      const entry: PendingRemoval = { key: `${id}-${Date.now()}`, item, originalIndex };
+      setPendingQueue((q) => [...q, entry]);
+      return prev.filter((i) => i.id !== id);
+    });
   }, []);
+
+  const handleUndo = useCallback((key: string) => {
+    setPendingQueue((q) => {
+      const entry = q.find((e) => e.key === key);
+      if (!entry) return q;
+      // Re-insert at original position relative to current list
+      setItems((prev) => {
+        const next = [...prev];
+        // Find the right insertion point by matching originalIndex order
+        const insertAt = next.findIndex(
+          (i) => MOCK_SAVED.findIndex((m) => m.id === i.id) > entry.originalIndex,
+        );
+        if (insertAt === -1) next.push(entry.item);
+        else next.splice(insertAt, 0, entry.item);
+        return next;
+      });
+      return q.filter((e) => e.key !== key);
+    });
+  }, []);
+
+  const commitRemoval = useCallback((key: string) => {
+    // TODO: Call tRPC mutation to persist removal for the specific item
+    setPendingQueue((q) => q.filter((e) => e.key !== key));
+  }, []);
+
+  const isEmpty = items.length === 0 && pendingQueue.length === 0;
 
   return (
     <SafeAreaView
@@ -192,7 +291,7 @@ export default function SavedArticlesScreen() {
         <View style={{ width: 44 }} lightColor="transparent" darkColor="transparent" />
       </View>
 
-      {items.length === 0 ? (
+      {isEmpty ? (
         <View style={styles.empty} lightColor="transparent" darkColor="transparent">
           <Ionicons name="bookmark-outline" size={48} color={theme.mutedForeground} />
           <Text style={[styles.emptyTitle, { color: theme.textSecondary }]}>Nothing saved yet</Text>
@@ -206,11 +305,27 @@ export default function SavedArticlesScreen() {
             {items.length} saved
           </Text>
           {items.map((item) => (
-            <SwipeableCard key={item.id} item={item} onUnsave={handleUnsave} />
+            <SwipeableCard key={item.id} item={item} onFullSwipe={handleFullSwipe} />
           ))}
-          <View style={{ height: sp[10] }} lightColor="transparent" darkColor="transparent" />
+          {/* Spacer so last card isn't hidden behind toast stack */}
+          <View
+            style={{ height: sp[6] + pendingQueue.length * (TOAST_HEIGHT + sp[2]) + sp[10] }}
+            lightColor="transparent"
+            darkColor="transparent"
+          />
         </ScrollView>
       )}
+
+      {/* Stacked undo toasts — newest at bottom, older ones shift up */}
+      {pendingQueue.map((entry, i) => (
+        <UndoToast
+          key={entry.key}
+          entry={entry}
+          stackIndex={pendingQueue.length - 1 - i}
+          onUndo={handleUndo}
+          onCommit={commitRemoval}
+        />
+      ))}
     </SafeAreaView>
   );
 }
@@ -271,44 +386,29 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.5,
   },
-  date: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-  },
+  date: { fontFamily: fonts.body, fontSize: 12 },
   cardTitle: {
     fontFamily: fonts.bodyMedium,
     fontSize: 14,
     lineHeight: 20,
   },
-  swipeHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    marginTop: sp[1],
-  },
-  swipeHintText: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-  },
-  // Swipe-to-unsave action revealed on the right
   deleteAction: {
-    backgroundColor: "#C0392B",
-    justifyContent: "center",
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    width: 88,
+    paddingHorizontal: sp[5],
+    gap: sp[2],
     marginBottom: sp[3],
     borderRadius: rd.lg,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
-  },
-  deleteActionInner: {
-    alignItems: "center",
-    gap: sp[1],
+    minWidth: 88,
   },
   deleteActionText: {
     color: colors.white,
     fontFamily: fonts.bodySemibold,
-    fontSize: 12,
+    fontSize: 14,
   },
   empty: {
     flex: 1,
@@ -317,14 +417,45 @@ const styles = StyleSheet.create({
     gap: sp[3],
     paddingHorizontal: sp[10],
   },
-  emptyTitle: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 16,
-  },
+  emptyTitle: { fontFamily: fonts.bodySemibold, fontSize: 16 },
   emptyHint: {
     fontFamily: fonts.body,
     fontSize: 13,
     textAlign: "center",
     lineHeight: 18,
   },
+  toast: {
+    position: "absolute",
+    left: sp[4],
+    right: sp[4],
+    borderRadius: rd.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  toastBar: { height: 3 },
+  toastContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: sp[4],
+    paddingVertical: sp[3],
+    gap: sp[3],
+    height: TOAST_HEIGHT,
+  },
+  toastLabel: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+  },
+  undoBtn: {
+    paddingHorizontal: sp[4],
+    paddingVertical: sp[2],
+    borderRadius: rd.full,
+    borderWidth: 1,
+  },
+  undoBtnText: { fontFamily: fonts.bodySemibold, fontSize: 13 },
 });
