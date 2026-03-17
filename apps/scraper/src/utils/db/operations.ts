@@ -110,7 +110,7 @@ export async function upsertBill(billData: BillData) {
 
   // Conditionally generate AI article
   let aiGeneratedArticle: string | undefined = undefined;
-  if (shouldGenerateArticle) {
+  if (shouldGenerateArticle && hasUsableText) {
     console.log(`Generating AI article for bill: ${billData.title}`);
     aiGeneratedArticle = await generateAIArticle(
       billData.title,
@@ -241,7 +241,7 @@ export async function upsertGovernmentContent(contentData: GovernmentContentData
 
   // Conditionally generate AI article
   let aiGeneratedArticle: string | undefined = undefined;
-  if (shouldGenerateArticle) {
+  if (shouldGenerateArticle && hasUsableText) {
     console.log(`Generating AI article for ${contentData.type}: ${contentData.title}`);
     aiGeneratedArticle = await generateAIArticle(
       contentData.title,
@@ -398,7 +398,7 @@ export async function upsertCourtCase(caseData: CourtCaseData) {
 
   // Conditionally generate AI article
   let aiGeneratedArticle: string | undefined = undefined;
-  if (shouldGenerateArticle) {
+  if (shouldGenerateArticle && hasUsableText) {
     console.log(`Generating AI article for court case: ${caseData.title}`);
     aiGeneratedArticle = await generateAIArticle(
       caseData.title,
