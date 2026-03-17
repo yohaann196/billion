@@ -74,25 +74,26 @@ export async function upsertBill(billData: BillData) {
   incrementTotalProcessed();
 
   // Determine what needs to be generated
+  const hasUsableText = isUsableText(billData.fullText);
   let shouldGenerateArticle = false;
   let shouldGenerateImage = false;
 
   if (!existing) {
     // New entry - generate everything
-    shouldGenerateArticle = isUsableText(billData.fullText);
-    shouldGenerateImage = isUsableText(billData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = hasUsableText;
     incrementNewEntries();
     console.log(`New bill detected: ${billData.billNumber}`);
   } else if (existing.contentHash !== newContentHash) {
     // Content changed - regenerate article, keep image
-    shouldGenerateArticle = isUsableText(billData.fullText);
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(billData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingChanged();
     console.log(`Content changed for bill: ${billData.billNumber}`);
   } else {
     // Content unchanged
     shouldGenerateArticle = false;
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(billData.fullText);
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingUnchanged();
     console.log(`No changes for bill: ${billData.billNumber}, skipping AI generation`);
   }
@@ -214,25 +215,26 @@ export async function upsertGovernmentContent(contentData: GovernmentContentData
   incrementTotalProcessed();
 
   // Determine what needs to be generated
+  const hasUsableText = isUsableText(contentData.fullText);
   let shouldGenerateArticle = false;
   let shouldGenerateImage = false;
 
   if (!existing) {
     // New entry - generate everything
-    shouldGenerateArticle = isUsableText(contentData.fullText);
-    shouldGenerateImage = isUsableText(contentData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = hasUsableText;
     incrementNewEntries();
     console.log(`New government content detected: ${contentData.title}`);
   } else if (existing.contentHash !== newContentHash) {
     // Content changed - regenerate article, keep image
-    shouldGenerateArticle = isUsableText(contentData.fullText);
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(contentData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingChanged();
     console.log(`Content changed for government content: ${contentData.title}`);
   } else {
     // Content unchanged
     shouldGenerateArticle = false;
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(contentData.fullText);
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingUnchanged();
     console.log(`No changes for government content: ${contentData.title}, skipping AI generation`);
   }
@@ -363,25 +365,26 @@ export async function upsertCourtCase(caseData: CourtCaseData) {
   incrementTotalProcessed();
 
   // Determine what needs to be generated
+  const hasUsableText = isUsableText(caseData.fullText);
   let shouldGenerateArticle = false;
   let shouldGenerateImage = false;
 
   if (!existing) {
     // New entry - generate everything
-    shouldGenerateArticle = isUsableText(caseData.fullText);
-    shouldGenerateImage = isUsableText(caseData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = hasUsableText;
     incrementNewEntries();
     console.log(`New court case detected: ${caseData.caseNumber}`);
   } else if (existing.contentHash !== newContentHash) {
     // Content changed - regenerate article, keep image
-    shouldGenerateArticle = isUsableText(caseData.fullText);
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(caseData.fullText);
+    shouldGenerateArticle = hasUsableText;
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingChanged();
     console.log(`Content changed for court case: ${caseData.caseNumber}`);
   } else {
     // Content unchanged
     shouldGenerateArticle = false;
-    shouldGenerateImage = !existing.hasThumbnail && isUsableText(caseData.fullText);
+    shouldGenerateImage = !existing.hasThumbnail && hasUsableText;
     incrementExistingUnchanged();
     console.log(`No changes for court case: ${caseData.caseNumber}, skipping AI generation`);
   }
