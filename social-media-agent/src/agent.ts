@@ -107,6 +107,17 @@ export class SocialMediaAgent {
     await this.waitForScreenReady(screen);
   }
 
+  async selectBrowseTab(label: 'All' | 'Bills' | 'Cases' | 'Orders'): Promise<void> {
+    if (!this.page) throw new Error('Agent not initialized.');
+
+    const tab = this.page.getByText(label, { exact: true }).first();
+    await tab.waitFor({ state: 'visible', timeout: 15000 });
+    await tab.click();
+    await this.waitForNetworkToSettle();
+    await this.page.locator('[data-testid="content-card"]').first().waitFor({ state: 'visible', timeout: 15000 });
+    await this.page.waitForTimeout(500);
+  }
+
   async extractContentFromBrowse(maxItems: number = 5): Promise<ContentItem[]> {
     if (!this.page) throw new Error('Agent not initialized.');
 
@@ -441,6 +452,25 @@ export class SocialMediaAgent {
     if (!this.page) throw new Error('Agent not initialized.');
 
     const screenshotPath = await this.screenshotUtils.captureFullPage(
+      this.page,
+      name
+    );
+
+    const result: ScreenshotResult = {
+      name,
+      path: screenshotPath,
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    return result;
+  }
+
+  async takeViewportScreenshot(name: string): Promise<ScreenshotResult> {
+    if (!this.page) throw new Error('Agent not initialized.');
+
+    const screenshotPath = await this.screenshotUtils.captureViewport(
       this.page,
       name
     );

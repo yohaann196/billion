@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "agent:run": "ts-node src/cli.ts"
+    "agent:run": "ts-node src/cli.ts",
+    "instagram": "ts-node src/cli.ts instagram"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { SocialMediaAgent } from './agent';
+import { generateInstagramPosts } from './instagram-generator';
 import * as path from 'path';
 import 'dotenv/config';
 
@@ -10,6 +11,42 @@ program
   .name('social-agent')
   .description('Social media agent for Billion news app')
   .version('1.0.0');
+
+program
+  .command('instagram')
+  .description('Generate Instagram-ready post folders under instagram-posts/')
+  .option('--category <type>', 'Category to capture: browse, feed, article, all', 'all')
+  .option('--count <number>', 'Number of browse/feed items to capture', '3')
+  .option('--article-id <id>', 'Article ID for article category')
+  .option('--headless', 'Run browser in headless mode', true)
+  .option('--no-headless', 'Show browser window')
+  .action(async (options) => {
+    const validCategories = ['browse', 'feed', 'article', 'all'];
+    if (!validCategories.includes(options.category)) {
+      console.error(`Invalid category: ${options.category}. Must be one of: ${validCategories.join(', ')}`);
+      process.exit(1);
+    }
+
+    try {
+      const results = await generateInstagramPosts({
+        category: options.category,
+        count: parseInt(options.count, 10),
+        articleId: options.articleId,
+        headless: options.headless,
+      });
+
+      console.log('\n=== Instagram Posts ===');
+      results.forEach((result, index) => {
+        console.log(`${index + 1}. ${result.title}`);
+        console.log(`   Folder: ${result.folderPath}`);
+        console.log(`   JSON: ${result.jsonPath}`);
+        console.log(`   Image: ${result.imagePath}`);
+      });
+    } catch (error) {
+      console.error('Error generating Instagram posts:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('run')

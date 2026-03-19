@@ -85,6 +85,18 @@ export class ScreenshotUtils {
     return screenshotPath;
   }
 
+  async captureViewport(page: Page, name: string): Promise<string> {
+    const screenshotPath = this.getScreenshotPath(name);
+
+    await page.screenshot({
+      path: screenshotPath,
+      type: 'png',
+    });
+
+    console.log(`Viewport screenshot saved: ${screenshotPath}`);
+    return screenshotPath;
+  }
+
   async captureMultipleElements(
     page: Page,
     selectors: string[],
