@@ -37,9 +37,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
+# local env files — never commit real secrets
+# .env.example is the only env file that SHOULD be committed (it has placeholder values)
 .env
-.env*.local
+.env.*
+!.env.example
 
 # vercel
 .vercel
