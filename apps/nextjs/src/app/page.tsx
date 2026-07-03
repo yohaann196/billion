@@ -18,7 +18,6 @@ import {
 import { HeroExperience } from "./_components/hero-experience";
 import { useIntroDone } from "./_components/intro-context";
 import { WaitlistForm } from "./_components/waitlist-form";
-import { WorkflowHero } from "./_components/workflow-hero";
 
 /* ── Gold accent tokens (not yet in Tailwind theme) ────────────────────── */
 const gold = "#c4a35a";
@@ -47,19 +46,6 @@ const sourceSystems = [
     title: "Cases",
     signal: "Filings, rulings, timelines",
     source: "Federal courts",
-  },
-];
-
-const lensCards = [
-  {
-    label: "Institutional",
-    color: "#6366f1",
-    line: "Agency authority, court posture, and precedent risk.",
-  },
-  {
-    label: "Impact",
-    color: "#4a7cff",
-    line: "People affected, local pressure, and implementation risk.",
   },
 ];
 
@@ -400,38 +386,6 @@ function SourceSystemsList() {
   );
 }
 
-function LensList() {
-  return (
-    <StaggerContainer
-      staggerDelay={0.08}
-      className="overflow-hidden rounded-[18px] border border-white/10 bg-white/[0.03]"
-    >
-      <div className="flex flex-col gap-2 border-b border-white/[0.07] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <span className="font-sans text-[12px] font-semibold tracking-[0.1em] text-white/72 uppercase">
-          Source text
-        </span>
-        <span className="font-sans text-[13px] text-white/45">
-          one record, multiple readings
-        </span>
-      </div>
-      {lensCards.map((lens) => (
-        <StaggerItem
-          key={lens.label}
-          variant="fadeUp"
-          className="group relative grid gap-3 border-b border-white/[0.07] px-5 py-4 transition-colors duration-200 last:border-b-0 hover:bg-white/[0.035] sm:grid-cols-[150px_1fr] sm:items-center"
-        >
-          <div>
-            <Badge type={lens.label} color={lens.color} />
-          </div>
-          <p className="text-foreground font-editorial m-0 text-[1.15rem] leading-[1.25] font-normal">
-            {lens.line}
-          </p>
-        </StaggerItem>
-      ))}
-    </StaggerContainer>
-  );
-}
-
 /* ── Page ──────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const introDone = useIntroDone();
@@ -535,31 +489,6 @@ export default function LandingPage() {
 
       <GoldDivider />
 
-      {/* ── DUAL LENS ─────────────────────────────────────────────── */}
-      <section
-        className="mx-auto grid grid-cols-1 gap-8 px-6 py-12 md:grid-cols-[0.82fr_1.18fr] md:items-center md:gap-16 md:py-14"
-        style={{ maxWidth: 1120 }}
-      >
-        <AnimatedSection variant="slideInRight" className="md:order-2">
-          <h2
-            className="text-foreground font-display m-0 leading-[1.18] font-normal tracking-[-0.01em]"
-            style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)" }}
-          >
-            Disagreement,
-            <br />
-            labeled.
-          </h2>
-          <p className="text-muted-foreground mt-4 mb-0 max-w-[32ch] font-sans text-[16px] leading-[1.6]">
-            Same source. Different stakes.
-          </p>
-        </AnimatedSection>
-        <AnimatedSection variant="slideInLeft" className="md:order-1">
-          <LensList />
-        </AnimatedSection>
-      </section>
-
-      <GoldDivider />
-
       {/* ── BRADBURY ──────────────────────────────────────────────── */}
       <AnimatedSection
         variant="scaleIn"
@@ -575,11 +504,10 @@ export default function LandingPage() {
             deeper reading.
           </em>
         </h2>
-        <p className="text-muted-foreground mx-auto mb-7 font-sans text-[18px] leading-[1.6]">
-          We're not a summarization engine. Instead, we encourage individual
-          critical thinking and independent research.
+        <p className="text-muted-foreground mx-auto mb-9 max-w-[46ch] font-sans text-[18px] leading-[1.6]">
+          We're not a summarization engine. Every brief links back to the
+          bill, order, or ruling it came from — so you can verify it yourself.
         </p>
-        <WorkflowHero />
         <Link
           href="#waitlist"
           className="bg-primary text-primary-foreground inline-flex h-[52px] cursor-pointer items-center justify-center rounded-full border-none px-7 font-sans text-[16px] font-medium whitespace-nowrap no-underline transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
