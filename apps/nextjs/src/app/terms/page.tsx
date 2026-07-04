@@ -69,7 +69,7 @@ export default function TermsPage() {
         </Link>
         <Link
           href="/privacy"
-          className="text-muted-foreground hover:text-gold font-sans text-[15px] font-medium no-underline transition-colors duration-200"
+          className="text-muted-foreground hover:text-accent font-sans text-[15px] font-medium no-underline transition-colors duration-200"
         >
           Privacy Policy
         </Link>
@@ -113,13 +113,13 @@ export default function TermsPage() {
         <div className="flex items-center gap-5 font-sans text-[13px]">
           <Link
             href="/terms"
-            className="text-muted-foreground hover:text-gold no-underline transition-colors duration-200"
+            className="text-muted-foreground hover:text-accent no-underline transition-colors duration-200"
           >
             Terms
           </Link>
           <Link
             href="/privacy"
-            className="text-muted-foreground hover:text-gold no-underline transition-colors duration-200"
+            className="text-muted-foreground hover:text-accent no-underline transition-colors duration-200"
           >
             Privacy
           </Link>

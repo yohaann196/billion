@@ -1,66 +1,98 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { useMarkIntroDone } from "./intro-context";
+
+/* ── The record gets marked ─────────────────────────────────────────────
+   A brief, skippable "stamp" moment on the wordmark — the same gesture
+   the signature Annotated Record section pays off later: something
+   official just got marked. ~650ms total, gone well before it overstays.
+
+   The overlay only ever decides whether to show itself inside an effect,
+   after mount. Server-render and the client's first render both output
+   null — deciding based on `matchMedia` during the initial render would
+   make the client's first pass disagree with the server-rendered markup,
+   and React has no reliable way to reconcile that away: the extra node
+   would be orphaned in the DOM with no fiber attached, unremovable. */
+
+const STAMP_S = 0.32;
+const HOLD_S = 0.16;
+const EXIT_S = 0.22;
+// Safety net: whatever else happens, never let the intro block the page.
+const FALLBACK_MS = 2500;
+
 export function IntroOverlay() {
-  const [phase, setPhase] = useState<"hold" | "animate" | "done">("hold");
-  const [targetPos, setTargetPos] = useState({ x: 0, y: 0 });
-  const targetRef = useRef<HTMLDivElement>(null);
+  const markDone = useMarkIntroDone();
+  const [visible, setVisible] = useState(false);
+  const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    if (targetRef.current) {
-      const rect = targetRef.current.getBoundingClientRect();
-      setTargetPos({
-        x: rect.left + 16 - window.innerWidth / 2,
-        y: rect.top + 16 - window.innerHeight / 2,
-      });
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (query.matches) {
+      markDone();
+      return;
     }
 
-    const t1 = setTimeout(() => setPhase("animate"), 1000);
-    const t2 = setTimeout(() => setPhase("done"), 1900);
+    setVisible(true);
+    const exitTimer = setTimeout(
+      () => setExiting(true),
+      (STAMP_S + HOLD_S) * 1000,
+    );
+    const fallbackTimer = setTimeout(() => {
+      setExiting(true);
+      markDone();
+    }, FALLBACK_MS);
+    // Any keypress skips — the intro is a brief flourish, not a gate.
+    const skip = () => setExiting(true);
+    window.addEventListener("keydown", skip);
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      clearTimeout(exitTimer);
+      clearTimeout(fallbackTimer);
+      window.removeEventListener("keydown", skip);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <AnimatePresence>
-      {phase !== "done" && (
-        <motion.div
-          key="overlay"
-          className="bg-background fixed inset-0 z-50 flex items-center justify-center"
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          {/* Hidden target matching nav layout to measure logo position */}
-          <div
-            className="fixed inset-x-0 top-0 mx-auto flex items-center justify-between px-6 py-5"
-            style={{ maxWidth: 1120, visibility: "hidden" }}
-          >
-            <div className="flex items-center gap-3">
-              <div ref={targetRef} className="h-8 w-8" />
-            </div>
-          </div>
+  if (!visible) return null;
 
-          <motion.div
-            animate={
-              phase === "animate" ? { x: targetPos.x, y: targetPos.y } : {}
-            }
-            transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
-            style={{ perspective: 1000 }}
-          >
+  return (
+    <AnimatePresence onExitComplete={markDone}>
+      {!exiting && (
+        <motion.div
+          key="intro"
+          className="bg-background fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center gap-4"
+          aria-hidden="true"
+          exit={{ opacity: 0 }}
+          transition={{ duration: EXIT_S, ease: [0.16, 1, 0.3, 1] }}
+          onClick={() => setExiting(true)}
+        >
+          <div className="relative flex items-center justify-center">
+            <motion.span
+              className="absolute rounded-full border border-white/25"
+              style={{ width: 64, height: 64 }}
+              initial={{ scale: 0.6, opacity: 0.6 }}
+              animate={{ scale: 2.2, opacity: 0 }}
+              transition={{ duration: STAMP_S, ease: [0.16, 1, 0.3, 1] }}
+            />
             <motion.img
               src="/billion-logo.png"
               alt="Billion"
-              className="h-20 w-20 rounded-2xl shadow-md"
-              animate={
-                phase === "animate" ? { rotateY: [0, 360], scale: 0.4 } : {}
-              }
-              transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+              className="h-16 w-16 rounded-2xl"
+              initial={{ scale: 0.72, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: STAMP_S, ease: [0.16, 1, 0.3, 1] }}
             />
-          </motion.div>
+          </div>
+          <motion.span
+            className="font-display text-foreground text-[15px] font-semibold tracking-[-0.01em]"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: STAMP_S, duration: 0.2, ease: "easeOut" }}
+          >
+            Billion
+          </motion.span>
         </motion.div>
       )}
     </AnimatePresence>

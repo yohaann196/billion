@@ -5,6 +5,7 @@ import {
   IBM_Plex_Serif,
   Inria_Serif,
 } from "next/font/google";
+import { MotionConfig } from "motion/react";
 
 import { cn } from "@acme/ui";
 import { ThemeProvider } from "@acme/ui/theme";
@@ -86,10 +87,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           enableSystem={false}
           disableTransitionOnChange
         >
-          <IntroProvider>
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
-            <IntroOverlay />
-          </IntroProvider>
+          <MotionConfig reducedMotion="user">
+            <IntroProvider>
+              <TRPCReactProvider>{props.children}</TRPCReactProvider>
+              <IntroOverlay />
+            </IntroProvider>
+          </MotionConfig>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -1,22 +1,33 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
-const IntroContext = createContext<boolean>(false);
+interface IntroContextValue {
+  done: boolean;
+  markDone: () => void;
+}
+
+const IntroContext = createContext<IntroContextValue>({
+  done: true,
+  markDone: () => undefined,
+});
 
 export function useIntroDone() {
-  return useContext(IntroContext);
+  return useContext(IntroContext).done;
+}
+
+export function useMarkIntroDone() {
+  return useContext(IntroContext).markDone;
 }
 
 export function IntroProvider({ children }: { children: ReactNode }) {
   const [done, setDone] = useState(false);
+  const markDone = useCallback(() => setDone(true), []);
 
-  useEffect(() => {
-    // Overlay: 1s hold + 0.9s animate + 0.4s exit fade = ~2.3s. Fire at 2.4s.
-    const timer = setTimeout(() => setDone(true), 2100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return <IntroContext.Provider value={done}>{children}</IntroContext.Provider>;
+  return (
+    <IntroContext.Provider value={{ done, markDone }}>
+      {children}
+    </IntroContext.Provider>
+  );
 }
