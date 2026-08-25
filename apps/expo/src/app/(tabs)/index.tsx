@@ -233,7 +233,11 @@ export default function BrowseScreen() {
           <>
             <View style={s.headerPad}>
               <View style={s.headerRow}>
-                <Text style={s.display}>Browse</Text>
+                {/* Takes the row's remaining width rather than sizing to its
+                    own measurement: the display serif loads asynchronously,
+                    and a box measured against the fallback font clips the
+                    last glyph once the real face swaps in. */}
+                <Text style={[s.display, s.headerTitle]}>Browse</Text>
                 {/* The saved list otherwise lives only under Settings, which
                     is hidden outside development — content nobody can get
                     back to is not saved in any useful sense. */}
@@ -453,6 +457,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  headerTitle: { flex: 1 },
   savedBtn: {
     flexDirection: "row",
     alignItems: "center",
