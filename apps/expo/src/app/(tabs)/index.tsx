@@ -26,6 +26,7 @@ import { ContentCard, Icon, Pill, Pills, SearchInput } from "~/components/ui";
 import { posthog } from "~/config/posthog";
 import { useContentJurisdiction } from "~/hooks/useContentJurisdiction";
 import { useDebounced } from "~/hooks/useDebounce";
+import { isSaveable, useSavedContent } from "~/hooks/useSavedContent";
 import { useUserAddress } from "~/hooks/useUserAddress";
 import { colors, fontBody, fontDisplay, hair, planes } from "~/styles";
 import { queryClient, trpc, trpcClient } from "~/utils/api";
@@ -62,6 +63,20 @@ export default function BrowseScreen() {
   const handleFilterChange = (f: VideoPost["type"] | "all") => {
     setFilter(f);
     posthog.capture("content_filter_applied", { filter_type: f });
+  };
+
+  const { isSaved, toggleSave, isSignedIn } = useSavedContent();
+
+  const openSaved = () => {
+    if (!isSignedIn) {
+      Alert.alert(
+        "Sign in to save",
+        "Sign in to bookmark and revisit content.",
+      );
+      return;
+    }
+    posthog.capture("saved_articles_opened", { source: "browse_header" });
+    router.push("/settings/saved-articles" as Href);
   };
 
   const handleSearch = (text: string) => {
@@ -217,7 +232,23 @@ export default function BrowseScreen() {
         ListHeaderComponent={
           <>
             <View style={s.headerPad}>
-              <Text style={s.display}>Browse</Text>
+              <View style={s.headerRow}>
+                <Text style={s.display}>Browse</Text>
+                {/* The saved list otherwise lives only under Settings, which
+                    is hidden outside development — content nobody can get
+                    back to is not saved in any useful sense. */}
+                <TouchableOpacity
+                  style={s.savedBtn}
+                  onPress={openSaved}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open saved articles"
+                  testID="browse-saved"
+                >
+                  <Icon name="bookmark" size={16} color={colors.white} />
+                  <Text style={s.savedBtnText}>Saved</Text>
+                </TouchableOpacity>
+              </View>
               <Text style={s.subtitle}>
                 What {jurisdictionInfo.subtitlePlace} is{" "}
                 <Text style={s.subtitleEm}>actually</Text> doing.
@@ -275,6 +306,17 @@ export default function BrowseScreen() {
           <View style={s.cardWrap}>
             <ContentCard
               item={toCardItem(item)}
+              saved={isSaved(item.id)}
+              onSave={
+                isSaveable(item.type)
+                  ? () =>
+                      toggleSave({
+                        id: item.id,
+                        type: item.type,
+                        title: item.title,
+                      })
+                  : undefined
+              }
               onPress={() => router.push(`/article-detail?id=${item.id}`)}
             />
           </View>
@@ -302,6 +344,17 @@ export default function BrowseScreen() {
                 <View key={item.id} style={s.otherCard}>
                   <ContentCard
                     item={toCardItem(item, { showJurisdiction: true })}
+                    saved={isSaved(item.id)}
+                    onSave={
+                      isSaveable(item.type)
+                        ? () =>
+                            toggleSave({
+                              id: item.id,
+                              type: item.type,
+                              title: item.title,
+                            })
+                        : undefined
+                    }
                     onPress={() => router.push(`/article-detail?id=${item.id}`)}
                   />
                 </View>
@@ -394,6 +447,28 @@ export default function BrowseScreen() {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: planes.navy },
   headerPad: { paddingHorizontal: 20 },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  savedBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    backgroundColor: planes.slate,
+    borderWidth: 1,
+    borderColor: hair[2],
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+  },
+  savedBtnText: {
+    fontFamily: fontBody.semibold,
+    fontSize: 13,
+    color: colors.white,
+  },
   display: {
     fontFamily: fontDisplay.bold,
     fontSize: 36,

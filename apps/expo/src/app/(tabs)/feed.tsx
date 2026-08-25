@@ -13,13 +13,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import type { VideoPost } from "@acme/api";
 
 import { Text } from "~/components/Themed";
 import { Badge, Icon, Placeholder } from "~/components/ui";
 import { posthog } from "~/config/posthog";
+import { isSaveable, useSavedContent } from "~/hooks/useSavedContent";
 import {
   colors,
   contentType,
@@ -30,7 +31,6 @@ import {
   resolveType,
 } from "~/styles";
 import { queryClient, trpc, trpcClient } from "~/utils/api";
-import { authClient } from "~/utils/auth";
 import { contentImageSource } from "~/utils/editorial-visuals";
 
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get("window");
@@ -44,8 +44,6 @@ const TYPE_TAG: Record<string, string> = {
 
 // Bottom tab bar height (see TabBar) so the CTA clears it.
 const TAB_BAR_HEIGHT = 74;
-
-const SAVEABLE_TYPES = new Set(["bill", "government_content", "court_case"]);
 
 function formatFeedAge(createdAt: Date): string {
   const elapsedMs = Math.max(0, Date.now() - createdAt.getTime());
@@ -83,62 +81,10 @@ function FeedCard({
   onOpen: () => void;
   onOpenSource: () => void;
 }) {
-  const canSave = SAVEABLE_TYPES.has(item.type);
+  const canSave = isSaveable(item.type);
   const contentId = item.originalContentId;
-
-  // content.saved.isSaved is a protected procedure — only query it when signed in,
-  // otherwise it throws UNAUTHORIZED.
-  const { data: session } = authClient.useSession();
-  const isSignedIn = !!session?.user;
-
-  const savedQuery = useQuery({
-    ...trpc.content.saved.isSaved.queryOptions({ contentId }),
-    enabled: canSave && isSignedIn,
-    staleTime: 5 * 60 * 1000,
-  });
-  const saved = savedQuery.data?.saved ?? false;
-
-  const saveMutation = useMutation({
-    ...trpc.content.saved.add.mutationOptions(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: trpc.content.saved.isSaved.queryKey({ contentId }),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: trpc.content.saved.list.infiniteQueryKey(),
-      });
-    },
-  });
-  const unsaveMutation = useMutation({
-    ...trpc.content.saved.remove.mutationOptions(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: trpc.content.saved.isSaved.queryKey({ contentId }),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: trpc.content.saved.list.infiniteQueryKey(),
-      });
-    },
-  });
-
-  const toggleSave = () => {
-    if (!canSave) return;
-    if (!isSignedIn) {
-      Alert.alert(
-        "Sign in to save",
-        "Sign in to bookmark and revisit content.",
-      );
-      return;
-    }
-    if (saved) {
-      unsaveMutation.mutate({ contentId });
-    } else {
-      saveMutation.mutate({
-        contentId,
-        contentType: item.type as "bill" | "government_content" | "court_case",
-      });
-    }
-  };
+  const { isSaved, toggleSave } = useSavedContent();
+  const saved = isSaved(contentId);
 
   const typeKey = resolveType(item.type);
   const t = contentType[typeKey];
@@ -235,11 +181,21 @@ function FeedCard({
           <Text style={s.ctaText}>Dig into the source</Text>
           <Icon name="external" size={17} color={planes.ink} />
         </TouchableOpacity>
-        {__DEV__ && canSave && (
+        {canSave && (
           <TouchableOpacity
             style={s.saveBtn}
-            onPress={toggleSave}
+            onPress={() =>
+              toggleSave({
+                id: contentId,
+                type: item.type,
+                title: item.title,
+              })
+            }
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={
+              saved ? "Remove from saved" : "Save to read later"
+            }
           >
             <Icon
               name={saved ? "bookmarkFill" : "bookmark"}
