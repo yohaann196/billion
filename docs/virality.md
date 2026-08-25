@@ -132,3 +132,21 @@ flyer.
 `expo-screen-capture` and `expo-sharing` are both native modules, so this needs
 a new binary build before it reaches devices — an OTA update alone will not
 pick them up. See [iOS release builds](./ios-release.md).
+
+### Why `expo` has a floor of 56.0.20
+
+`expo-screen-capture@56.0.5` calls `SceneGeometry.keyWindow()`, which
+`expo-modules-core` only gained in **56.0.24**. Against anything older the iOS
+build fails to compile with `cannot find 'SceneGeometry' in scope`. The floor
+is expressed as `expo@~56.0.20`, because that is the first `expo` patch
+depending on `expo-modules-core@~56.0.24`.
+
+Pinning `expo-screen-capture` back to 56.0.4 would also compile, and was
+rejected: Renovate automerges here and CI never builds native code, so the pin
+would be lifted again by a green-checked bot PR and the break would resurface
+on whoever next ran a device build.
+
+Anything that lowers the `expo` range has to move `expo-screen-capture` down in
+the same commit, or the next native build breaks. **CI will not catch this** —
+`bundle-expo` only runs `expo export`, which bundles JavaScript and never
+compiles Swift.

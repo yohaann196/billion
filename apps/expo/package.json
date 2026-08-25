@@ -32,7 +32,7 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:",
-    "expo": "~56.0.18",
+    "expo": "~56.0.20",
     "expo-application": "~56.0.3",
     "expo-blur": "~56.0.4",
     "expo-build-properties": "~56.0.24",
