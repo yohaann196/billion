@@ -21,6 +21,15 @@ export function NavHeader({
   return (
     <View style={[s.wrap, { paddingTop: insets.top + 4 }]}>
       <View style={s.row}>
+        {/* Centred against the header rather than against the gap between the
+            two side slots, so a screen with two actions does not push its
+            title off-centre. Behind the buttons in the layout, and inert, so
+            a long title cannot swallow a tap. */}
+        {!large && (
+          <Text style={s.title} numberOfLines={1} pointerEvents="none">
+            {title}
+          </Text>
+        )}
         {onBack ? (
           <TouchableOpacity
             onPress={onBack}
@@ -33,7 +42,6 @@ export function NavHeader({
         ) : (
           <View style={s.spacer} />
         )}
-        {!large && <Text style={s.title}>{title}</Text>}
         <View style={s.action}>{action}</View>
       </View>
       {large && <Text style={s.large}>{title}</Text>}
@@ -61,11 +69,21 @@ const s = StyleSheet.create({
   },
   spacer: { width: 40 },
   title: {
+    position: "absolute",
+    left: 48,
+    right: 48,
+    textAlign: "center",
     fontFamily: "AlbertSans-SemiBold",
     fontSize: 17,
     color: colors.white,
   },
-  action: { width: 40, alignItems: "flex-end" },
+  action: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 16,
+    minWidth: 40,
+  },
   large: {
     fontFamily: fontDisplay.bold,
     fontSize: 34,
